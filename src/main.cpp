@@ -3,21 +3,6 @@
 
 const char* SSID = "test";
 const char* PASSWORD = "Test1234";
-/*
-void setup() { 
-  Serial.begin(115200);
-  //WiFi.mode(WIFI_STA);
-  WiFi.begin(SSID, PASSWORD);
-
-  Serial.print(F("Connecting to WiFi .."));
-  while (WiFi.status() != WL_CONNECTED) {
-    Serial.print(F('.'));
-    delay(500);
-  }
-  Serial.printf("Connected to \"%S\", with ip: ",SSID);
-  Serial.println(WiFi.localIP());
-}
-*/
 
  
 void setup() {
