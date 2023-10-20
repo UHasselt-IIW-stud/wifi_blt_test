@@ -1,16 +1,28 @@
 #include <Arduino.h>
 #include "WiFi.h"
 #include <esp_wpa2.h> //wpa2 library for connections to Enterprise networks
+#include <Adafruit_NeoPixel.h>
 
 //Use temporary credentials, you can request them at wifi.uhasselt.be (they are active for approx. 24h)
 const char *SSID = "UHasselt";
-const char *PASSWORD = "518e012846";
-const char *IDENTITY = "visitor-1012065439";
+const char *PASSWORD = "chops-preys-part";
+const char *IDENTITY = "visitor-0629";
+
+//Addressable LED constructor
+Adafruit_NeoPixel LED(1, 7, NEO_RGB + NEO_KHZ800);
 
 bool ConnectWPA2_Enterprise(void);
 
 void setup() {
-  Serial.begin(115200);
+  LED.begin(); // INITIALIZE NeoPixel strip object (REQUIRED)
+  LED.show();  // Turn OFF all pixels ASAP
+
+  LED.setPixelColor(0, LED.Color(0, 0, 100));
+  LED.show();   // Send the updated pixel colors to the hardware.
+
+  //Serial.begin(115200); 
+  Serial.begin(115200); 
+  Serial.println("Starting setting up WiFi network.");
   ConnectWPA2_Enterprise();
 }
 
@@ -18,12 +30,15 @@ void loop() {
   delay(5000);
   if(WiFi.isConnected()){
     Serial.printf("Wifi is still connected (%ddbm).\n",WiFi.RSSI());
+    LED.setPixelColor(0, LED.Color(0, 100, 0));
+    LED.show();   // Send the updated pixel colors to the hardware.
   }
   else{
     Serial.println("\n\tWiFi was disconnected, reconnecting.\n");
+    LED.setPixelColor(0, LED.Color(100, 0, 0));
+    LED.show();   // Send the updated pixel colors to the hardware.
     ConnectWPA2_Enterprise();
   }
-
 }
 
     
