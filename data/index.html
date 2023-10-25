@@ -1,0 +1,133 @@
+<!DOCTYPE HTML>
+<html>
+<!-- Rui Santos - Complete project details at https://RandomNerdTutorials.com
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software. -->
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!--Online script (Client gets the script from the web)
+        <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/highcharts-more.js"></script>
+        -->
+    <!--Offline script (Client gets the script from the ESP)-->
+        <script src="/highcharts.js"></script>
+        <script src="/highcharts-more.js"></script>
+        <style>
+            body {
+                min-width: 310px;
+                max-width: 800px;
+                height: 400px;
+                margin: 0 auto;
+            }
+
+            h2 {
+                font-family: Arial;
+                font-size: 2.5rem;
+                text-align: center;
+            }
+        </style>
+    </head>
+    <body>
+        <h2>ESP RSSI and millis() plotter</h2>
+        <div id="chart-Rssi" class="container"></div>
+        <div id="chart-time" class="container"></div>
+
+    </body>
+
+    <script>
+        var chartT = new Highcharts.Chart({
+            chart: {
+                renderTo: 'chart-Rssi',
+                type: 'scatter'
+            },
+            title: { text: 'RSSI' },
+            series: [{
+                showInLegend: false,
+                data: []
+            }],
+            plotOptions: {
+                scatter: {
+                    animation: false,
+                    dataLabels: { enabled: false }
+                },
+                series: { color: '#059e8a' }
+            },
+            xAxis: {
+                type: 'datetime',
+                dateTimeLabelFormats: { second: '%H:%M:%S' }
+            },
+            yAxis: {
+                title: { text: 'Rssi of the connected network' }
+            },
+            credits: { enabled: false }
+        });
+
+        setInterval(function () {
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == 4 && this.status == 200) {
+                    var x = (new Date()).getTime(),
+                        y = parseFloat(this.responseText);
+                    //console.log(this.responseText);
+                    if (chartT.series[0].data.length > 100) {
+                        chartT.series[0].addPoint([x, y], true, true, true);
+                    } else {
+                        chartT.series[0].addPoint([x, y], true, false, true);
+                    }
+                }
+            };
+            xhttp.open("GET", "/Rssi", true);
+            xhttp.send();
+        }, 500);        //was: 30000
+
+        //**************************************************************
+        var chartP = new Highcharts.Chart({
+            chart: {
+                renderTo: 'chart-time',
+                type: 'scatter'
+            },
+            title: { text: 'Mills time' },
+            series: [{
+                showInLegend: false,
+                data: []
+            }],
+            plotOptions: {
+                line: {
+                    animation: false,
+                    dataLabels: { enabled: false }
+                },
+                series: { color: '#18009c' }
+            },
+            xAxis: {
+                type: 'datetime',
+                dateTimeLabelFormats: { second: '%H:%M:%S' }
+            },
+            yAxis: {
+                title: { text: 'ESP32 time in ms' }
+            },
+            credits: { enabled: false }
+        });
+        setInterval(function () {
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == 4 && this.status == 200) {
+                    var x = (new Date()).getTime(),
+                        y = parseFloat(this.responseText);
+                    //console.log(this.responseText);
+                    if (chartP.series[0].data.length > 40) {
+                        chartP.series[0].addPoint([x, y], true, true, true);
+                    } else {
+                        chartP.series[0].addPoint([x, y], true, false, true);
+                    }
+                }
+            };
+            xhttp.open("GET", "/Timems", true);
+            xhttp.send();
+        }, 500);  //was: 30000
+        //**************************************************************
+
+    </script>
+    </html>

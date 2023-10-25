@@ -1,73 +1,91 @@
+//Asynchronous Web Server Example, lib has been modified but has not been tested on actual hardware yet!
+
 #include <Arduino.h>
-#include "WiFi.h"
-#include <esp_wpa2.h> //wpa2 library for connections to Enterprise networks
+#include <WiFi.h>
+//#include <ESPAsyncWebServer.h>    //PlatformIO lib manager: ESP Async WebServer by Hristo Gochkov 
+#include "ESPAsyncWebServer.h"    //Local version of the library, modified to work with ESP32-C3, 
+                                  //to use the library version, replace the above line with this one,
+                                  //and modify platformio.ini as well.
+#include <SPIFFS.h>
 #include <Adafruit_NeoPixel.h>
 
 //Use temporary credentials, you can request them at wifi.uhasselt.be (they are active for approx. 24h)
-const char *SSID = "UHasselt";
-const char *PASSWORD = "chops-preys-part";
-const char *IDENTITY = "visitor-0629";
+const char *SSID = "test";
+const char *PASSWORD = "test1234";
+
 
 //Addressable LED constructor
 Adafruit_NeoPixel LED(1, 7, NEO_RGB + NEO_KHZ800);
 
-bool ConnectWPA2_Enterprise(void);
+AsyncWebServer server(80);		// Create AsyncWebServer object on port 80
+String GetRssi(void);
+String GetMillis(void);
+
 
 void setup() {
-  LED.begin(); // INITIALIZE NeoPixel strip object (REQUIRED)
-  LED.show();  // Turn OFF all pixels ASAP
-
-  LED.setPixelColor(0, LED.Color(0, 0, 100));
-  LED.show();   // Send the updated pixel colors to the hardware.
-
-  //Serial.begin(115200); 
   Serial.begin(115200); 
   Serial.println("Starting setting up WiFi network.");
-  ConnectWPA2_Enterprise();
+
+  //Set up Builtin LED
+  LED.begin(); // INITIALIZE NeoPixel strip object (REQUIRED)
+  LED.show();  // Turn OFF all pixels ASAP
+  LED.setPixelColor(0, LED.Color(0, 0, 100)); //RGB: Blue --> Setup
+  LED.show();   // Send the updated pixel colors to the hardware.
+
+  // Initialize SPIFFS
+  if (!SPIFFS.begin()) {
+		Serial.println(F("An Error has occurred while mounting SPIFFS"));
+		return;
+	}
+
+  WiFi.begin(SSID, PASSWORD); //connect to non-WPA2-Enterprise
+
+	while (WiFi.status() != WL_CONNECTED) {
+		delay(500);
+		Serial.print(".");
+	}
+  LED.setPixelColor(0, LED.Color(0, 100, 0)); //RGB: Green --> WiFi connected
+  LED.show();   // Send the updated pixel colors to the hardware.
+
+  	// Print ESP32 SSID and Local IP Address
+	Serial.print(F("\nReady\n\nConnect your device to \"")); Serial.print(WiFi.SSID().c_str());
+	Serial.print(F("\", point your browser to: \"")); Serial.print(WiFi.localIP()); Serial.println("\".");
+
+
+  //Setup the webserver
+	// Route for root / web page
+	server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
+		request->send(SPIFFS, "/index.html");
+	});
+	server.on("/Rssi", HTTP_GET, [](AsyncWebServerRequest *request) {				//Transmits the data, formatted as string 
+		request->send_P(200, "text/plain", GetRssi().c_str());				//.c_str() generates a pointer to the beginning of the string
+	});
+	server.on("/Timems", HTTP_GET, [](AsyncWebServerRequest *request) {
+		request->send_P(200, "text/plain", GetMillis().c_str());
+	});
+
+
+	//Host static files required for the correct implementation of the website
+	server.serveStatic("/highcharts.js", SPIFFS, "/highcharts.js");				// Serve the file "/www/page.htm" when request url is "/page.htm"
+	server.serveStatic("/highcharts-more.js", SPIFFS, "/highcharts-more.js");	//server.serveStatic("/RequestURL.html", SPIFFS, "/Hostfolder/page.htm");
+	server.serveStatic("/favicon.ico", SPIFFS, "/favicon.ico");
+
+
+	// Start server
+	server.begin();
+	Serial.println(F("Setup Ready.\n\n"));
 }
 
 void loop() {
   delay(5000);
-  if(WiFi.isConnected()){
-    Serial.printf("Wifi is still connected (%ddbm).\n",WiFi.RSSI());
-    LED.setPixelColor(0, LED.Color(0, 100, 0));
-    LED.show();   // Send the updated pixel colors to the hardware.
-  }
-  else{
-    Serial.println("\n\tWiFi was disconnected, reconnecting.\n");
-    LED.setPixelColor(0, LED.Color(100, 0, 0));
-    LED.show();   // Send the updated pixel colors to the hardware.
-    ConnectWPA2_Enterprise();
-  }
+
 }
 
-    
 
-//Connects to WPA2-Enterprise network
-bool ConnectWPA2_Enterprise(void){
-  WiFi.disconnect(true);  //disconnect from wifi to set new wifi connection
-  WiFi.mode(WIFI_STA); //init wifi mode as station (normal WiFi client)
+String GetRssi(){
+  return String(WiFi.RSSI());
+}
 
-  esp_wifi_sta_wpa2_ent_set_identity((uint8_t *)IDENTITY, strlen(IDENTITY)); //provide identity
-  esp_wifi_sta_wpa2_ent_set_username((uint8_t *)IDENTITY, strlen(IDENTITY)); //provide username --> identity and username is same
-  esp_wifi_sta_wpa2_ent_set_password((uint8_t *)PASSWORD, strlen(PASSWORD)); //provide password
-
-  esp_wifi_sta_wpa2_ent_enable();
-
-  WiFi.begin(SSID); //connect to wifi
-  uint8_t counter = 0;
-
-  Serial.print("\n\nConnecting to WiFi");
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-    counter++;
-    if (counter >= 60) { //after 30 seconds timeout...
-      return 0;
-    }
-  }
-  Serial.printf("\nWiFi connected to \"%s\" (WPA2-Enterprise), with IP: ", SSID);
-  Serial.println(WiFi.localIP()); //print LAN IP
-
-  return 1;
+String GetMillis(){
+  return String(millis());
 }
