@@ -1,20 +1,24 @@
 <!DOCTYPE HTML>
 <html>
-<!-- Rui Santos - Complete project details at https://RandomNerdTutorials.com
+<!-- Modified from: 
+    Rui Santos - Complete project details at https://RandomNerdTutorials.com
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files.
 The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software. -->
+
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!--Online script (Client gets the script from the web)
+    <!--Online script (Client downloads the highcharts scripts from the web)
         <script src="https://code.highcharts.com/highcharts.js"></script>
-    <script src="https://code.highcharts.com/highcharts-more.js"></script>
+        <script src="https://code.highcharts.com/highcharts-more.js"></script>
         -->
-    <!--Offline script (Client gets the script from the ESP)-->
+
+    <!--Offline script (Client downloads the javascript files from the ESP)-->
         <script src="/highcharts.js"></script>
         <script src="/highcharts-more.js"></script>
+
         <style>
             body {
                 min-width: 310px;
@@ -30,11 +34,11 @@ copies or substantial portions of the Software. -->
             }
         </style>
     </head>
+
     <body>
         <h2>ESP RSSI and millis() plotter</h2>
         <div id="chart-Rssi" class="container"></div>
         <div id="chart-time" class="container"></div>
-
     </body>
 
     <script>
@@ -89,7 +93,7 @@ copies or substantial portions of the Software. -->
                 renderTo: 'chart-time',
                 type: 'scatter'
             },
-            title: { text: 'Mills time' },
+            title: { text: 'Millis time' },
             series: [{
                 showInLegend: false,
                 data: []

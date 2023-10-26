@@ -1,4 +1,4 @@
-//Asynchronous Web Server Example, lib has been modified but has not been tested on actual hardware yet!
+//Asynchronous Web Server Example, ESPAsyncWebServer lib has been modified to accept latest version of IDF and Arduino subsstem!
 
 #include <Arduino.h>
 #include <WiFi.h>
@@ -15,12 +15,14 @@ const char *PASSWORD = "test1234";
 
 
 //Addressable LED constructor
-Adafruit_NeoPixel LED(1, 7, NEO_RGB + NEO_KHZ800);
+Adafruit_NeoPixel LED(1, 8, NEO_GRB + NEO_KHZ800);      //ESP32-C3-DevKitC-02
+//Adafruit_NeoPixel LED(1, 7, NEO_RGB + NEO_KHZ800);    //ESP32-C3 Pico Kit
 
 AsyncWebServer server(80);		// Create AsyncWebServer object on port 80
 String GetRssi(void);
 String GetMillis(void);
-
+unsigned long LastSeenMs = 0;
+uint16_t TimeoutMs = 1000; //milliseconds
 
 void setup() {
   Serial.begin(115200); 
@@ -63,7 +65,7 @@ void setup() {
 	server.on("/Timems", HTTP_GET, [](AsyncWebServerRequest *request) {
 		request->send_P(200, "text/plain", GetMillis().c_str());
 	});
-
+  
 
 	//Host static files required for the correct implementation of the website
 	server.serveStatic("/highcharts.js", SPIFFS, "/highcharts.js");				// Serve the file "/www/page.htm" when request url is "/page.htm"
@@ -76,11 +78,14 @@ void setup() {
 	Serial.println(F("Setup Ready.\n\n"));
 }
 
-void loop() {
-  delay(5000);
-
+void loop(){
+  //Check if the client is still connected
+  if (!WiFi.isConnected()){
+    LED.setPixelColor(0, LED.Color(100, 0, 0)); //RGB: Red --> Timeout
+    LED.show();   // Send the updated pixel colors to the hardware.
+    while(1);
+  }
 }
-
 
 String GetRssi(){
   return String(WiFi.RSSI());
