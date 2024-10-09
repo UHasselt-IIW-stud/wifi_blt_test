@@ -1,22 +1,13 @@
-//Asynchronous Web Server Example, ESPAsyncWebServer lib has been modified to accept latest version of IDF and Arduino subsstem!
 
 #include <Arduino.h>
 #include <WiFi.h>
-//#include <ESPAsyncWebServer.h>    //PlatformIO lib manager: ESP Async WebServer by Hristo Gochkov 
-#include "ESPAsyncWebServer.h"    //Local version of the library, modified to work with ESP32-C3, 
-                                  //to use the library version, replace the above line with this one,
-                                  //and modify platformio.ini as well.
+#include <ESPAsyncWebServer.h>    //PlatformIO lib manager: ESP Async WebServer by Hristo Gochkov 
 #include <SPIFFS.h>
-#include <Adafruit_NeoPixel.h>
 
-//Use temporary credentials, you can request them at wifi.uhasselt.be (they are active for approx. 24h)
+//Use temporary credentials, you can use your phone or computer to share a network.
 const char *SSID = "test";
 const char *PASSWORD = "test1234";
 
-
-//Addressable LED constructor
-Adafruit_NeoPixel LED(1, 8, NEO_GRB + NEO_KHZ800);      //ESP32-C3-DevKitC-02
-//Adafruit_NeoPixel LED(1, 7, NEO_RGB + NEO_KHZ800);    //ESP32-C3 Pico Kit
 
 AsyncWebServer server(80);		// Create AsyncWebServer object on port 80
 String GetRssi(void);
@@ -28,29 +19,23 @@ void setup() {
   Serial.begin(115200); 
   Serial.println("Starting setting up WiFi network.");
 
-  //Set up Builtin LED
-  LED.begin(); // INITIALIZE NeoPixel strip object (REQUIRED)
-  LED.show();  // Turn OFF all pixels ASAP
-  LED.setPixelColor(0, LED.Color(0, 0, 100)); //RGB: Blue --> Setup
-  LED.show();   // Send the updated pixel colors to the hardware.
-
   // Initialize SPIFFS
   if (!SPIFFS.begin()) {
 		Serial.println(F("An Error has occurred while mounting SPIFFS"));
 		return;
 	}
 
-  WiFi.begin(SSID, PASSWORD); //connect to non-WPA2-Enterprise
+	Serial.println(F("Connecting to Wifi."));
+	WiFi.mode(WIFI_STA); //Station mode
+	WiFi.begin(SSID, PASSWORD); //connect to non-WPA2-Enterprise
 
 	while (WiFi.status() != WL_CONNECTED) {
 		delay(500);
 		Serial.print(".");
 	}
-  LED.setPixelColor(0, LED.Color(0, 100, 0)); //RGB: Green --> WiFi connected
-  LED.show();   // Send the updated pixel colors to the hardware.
 
   	// Print ESP32 SSID and Local IP Address
-	Serial.print(F("\nReady\n\nConnect your device to \"")); Serial.print(WiFi.SSID().c_str());
+	Serial.print(F("\nDone\n\nConnect your device to \"")); Serial.print(WiFi.SSID().c_str());
 	Serial.print(F("\", point your browser to: \"")); Serial.print(WiFi.localIP()); Serial.println("\".");
 
 
@@ -81,8 +66,6 @@ void setup() {
 void loop(){
   //Check if the client is still connected
   if (!WiFi.isConnected()){
-    LED.setPixelColor(0, LED.Color(100, 0, 0)); //RGB: Red --> Timeout
-    LED.show();   // Send the updated pixel colors to the hardware.
     while(1);
   }
 }
