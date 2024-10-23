@@ -3,11 +3,7 @@
 #include <WiFi.h>
 #include <ESPAsyncWebServer.h>    //PlatformIO lib manager: ESP Async WebServer by Hristo Gochkov 
 #include <SPIFFS.h>
-
-//Use temporary credentials, you can use your phone or computer to share a network.
-const char *SSID = "test";
-const char *PASSWORD = "test1234";
-
+#include <secrets.h>
 
 AsyncWebServer server(80);		// Create AsyncWebServer object on port 80
 String GetRssi(void);
